@@ -2,6 +2,7 @@ use crate::arithmetic::{best_multiexp, CurveAffine};
 use crate::poly::{commitment::MSM, ipa::commitment::ParamsVerifierIPA};
 use group::Group;
 use halo2_middleware::ff::Field;
+use halo2curves::zal::{H2cEngine, MsmAccel};
 use std::collections::BTreeMap;
 
 /// A multiscalar multiplication in the polynomial commitment scheme
@@ -166,7 +167,8 @@ impl<'a, C: CurveAffine> MSM<C> for MSMIPA<'a, C> {
 
         assert_eq!(scalars.len(), len);
 
-        best_multiexp(&scalars, &bases)
+        let engine = H2cEngine::new();
+        engine.msm(&scalars, &bases)
     }
 
     fn bases(&self) -> Vec<C::CurveExt> {

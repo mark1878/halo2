@@ -1,4 +1,4 @@
-use crate::arithmetic::{best_multiexp, g_to_lagrange, parallelize};
+use crate::arithmetic::{best_fft, g_to_lagrange, parallelize, CurveAffine, CurveExt};
 use crate::helpers::SerdeCurveAffine;
 use crate::poly::commitment::{Blind, CommitmentScheme, Params, ParamsProver, ParamsVerifier};
 use crate::poly::{Coeff, LagrangeCoeff, Polynomial};
@@ -7,7 +7,7 @@ use crate::SerdeFormat;
 use group::{prime::PrimeCurveAffine, Curve, Group};
 use halo2_middleware::ff::{Field, PrimeField};
 use halo2curves::pairing::Engine;
-use halo2curves::CurveExt;
+use halo2curves::zal::{H2cEngine, MsmAccel};
 use rand_core::{OsRng, RngCore};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -308,7 +308,8 @@ where
         let bases = &self.g_lagrange;
         let size = scalars.len();
         assert!(bases.len() >= size);
-        best_multiexp(&scalars, &bases[0..size])
+        let engine = H2cEngine::new();
+        engine.msm(&scalars, &bases[0..size])
     }
 
     /// Writes params to a buffer.
@@ -352,7 +353,8 @@ where
         let bases = &self.g;
         let size = scalars.len();
         assert!(bases.len() >= size);
-        best_multiexp(&scalars, &bases[0..size])
+        let engine = H2cEngine::new();
+        engine.msm(&scalars, &bases[0..size])
     }
 
     fn get_g(&self) -> &[E::G1Affine] {

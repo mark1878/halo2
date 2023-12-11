@@ -3,13 +3,14 @@
 //!
 //! [halo]: https://eprint.iacr.org/2019/1021
 
-use crate::arithmetic::{best_multiexp, g_to_lagrange, parallelize, CurveAffine, CurveExt};
+use crate::arithmetic::{g_to_lagrange, parallelize, CurveAffine, CurveExt};
 use crate::helpers::CurveRead;
 use crate::poly::commitment::{Blind, CommitmentScheme, Params, ParamsProver, ParamsVerifier};
 use crate::poly::ipa::msm::MSMIPA;
 use crate::poly::{Coeff, LagrangeCoeff, Polynomial};
 
 use group::{Curve, Group};
+use halo2curves::zal::{H2cEngine, MsmAccel};
 use std::marker::PhantomData;
 
 mod prover;
@@ -99,7 +100,8 @@ impl<'params, C: CurveAffine> Params<'params, C> for ParamsIPA<C> {
         tmp_bases.extend(self.g_lagrange.iter());
         tmp_bases.push(self.w);
 
-        best_multiexp::<C>(&tmp_scalars, &tmp_bases)
+        let engine = H2cEngine::new();
+        engine.msm(&tmp_scalars, &tmp_bases)
     }
 
     /// Writes params to a buffer.
@@ -219,7 +221,8 @@ impl<'params, C: CurveAffine> ParamsProver<'params, C> for ParamsIPA<C> {
         tmp_bases.extend(self.g.iter());
         tmp_bases.push(self.w);
 
-        best_multiexp::<C>(&tmp_scalars, &tmp_bases)
+        let engine = H2cEngine::new();
+        engine.msm(&tmp_scalars, &tmp_bases)
     }
 
     fn get_g(&self) -> &[C] {
