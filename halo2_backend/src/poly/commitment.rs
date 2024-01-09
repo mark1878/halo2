@@ -6,7 +6,7 @@ use super::{
 use crate::poly::Error;
 use crate::transcript::{EncodedChallenge, TranscriptRead, TranscriptWrite};
 use halo2_middleware::ff::Field;
-use halo2curves::CurveAffine;
+use halo2curves::{zal::MsmAccel, CurveAffine};
 use rand_core::RngCore;
 use std::{
     fmt::Debug,
@@ -62,6 +62,7 @@ pub trait Params<'params, C: CurveAffine>: Sized + Clone + Debug {
     /// `r`.
     fn commit_lagrange(
         &self,
+        engine: &impl MsmAccel<C>,
         poly: &Polynomial<C::ScalarExt, LagrangeCoeff>,
         r: Blind<C::ScalarExt>,
     ) -> C::CurveExt;
@@ -84,8 +85,12 @@ pub trait ParamsProver<'params, C: CurveAffine>: Params<'params, C> {
     /// This computes a commitment to a polynomial described by the provided
     /// slice of coefficients. The commitment may be blinded by the blinding
     /// factor `r`.
-    fn commit(&self, poly: &Polynomial<C::ScalarExt, Coeff>, r: Blind<C::ScalarExt>)
-        -> C::CurveExt;
+    fn commit(
+        &self,
+        engine: &impl MsmAccel<C>,
+        poly: &Polynomial<C::ScalarExt, Coeff>,
+        r: Blind<C::ScalarExt>,
+    ) -> C::CurveExt;
 
     /// Getter for g generators
     fn get_g(&self) -> &[C];
@@ -111,10 +116,10 @@ pub trait MSM<C: CurveAffine>: Clone + Debug + Send + Sync {
     fn scale(&mut self, factor: C::Scalar);
 
     /// Perform multiexp and check that it results in zero
-    fn check(&self) -> bool;
+    fn check(&self, engine: &impl MsmAccel<C>) -> bool;
 
     /// Perform multiexp and return the result
-    fn eval(&self) -> C::CurveExt;
+    fn eval(&self, engine: &impl MsmAccel<C>) -> C::CurveExt;
 
     /// Return base points
     fn bases(&self) -> Vec<C::CurveExt>;
@@ -140,6 +145,7 @@ pub trait Prover<'params, Scheme: CommitmentScheme> {
         I,
     >(
         &self,
+        engine: &impl MsmAccel<Scheme::Curve>,
         rng: R,
         transcript: &mut T,
         queries: I,

@@ -3,6 +3,7 @@ use group::{
     Curve,
 };
 use halo2_middleware::ff::PrimeField;
+use halo2curves::zal::MsmAccel;
 use rand_core::RngCore;
 use std::iter::{self, ExactSizeIterator};
 
@@ -55,6 +56,7 @@ pub(in crate::plonk) fn permutation_commit<
     R: RngCore,
     T: TranscriptWrite<C, E>,
 >(
+    engine: &impl MsmAccel<C>,
     arg: &Argument,
     params: &P,
     pk: &plonk::ProvingKey<C>,
@@ -172,7 +174,7 @@ pub(in crate::plonk) fn permutation_commit<
 
         let blind = Blind(C::Scalar::random(&mut rng));
 
-        let permutation_product_commitment_projective = params.commit_lagrange(&z, blind);
+        let permutation_product_commitment_projective = params.commit_lagrange(engine, &z, blind);
         let permutation_product_blind = blind;
         let z = domain.lagrange_to_coeff(z);
         let permutation_product_poly = z.clone();

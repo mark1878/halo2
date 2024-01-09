@@ -9,6 +9,7 @@ use crate::transcript::{EncodedChallenge, TranscriptWrite};
 
 use group::Curve;
 use halo2_middleware::ff::Field;
+use halo2curves::zal::MsmAccel;
 use rand_core::RngCore;
 use std::io;
 use std::marker::PhantomData;
@@ -29,6 +30,7 @@ impl<'params, C: CurveAffine> Prover<'params, IPACommitmentScheme<C>> for Prover
     /// Create a multi-opening proof
     fn create_proof<'com, Z: EncodedChallenge<C>, T: TranscriptWrite<C, Z>, R, I>(
         &self,
+        engine: &impl MsmAccel<C>,
         mut rng: R,
         transcript: &mut T,
         queries: I,
@@ -93,7 +95,10 @@ impl<'params, C: CurveAffine> Prover<'params, IPACommitmentScheme<C>> for Prover
             .unwrap();
 
         let q_prime_blind = Blind(C::Scalar::random(&mut rng));
-        let q_prime_commitment = self.params.commit(&q_prime_poly, q_prime_blind).to_affine();
+        let q_prime_commitment = self
+            .params
+            .commit(engine, &q_prime_poly, q_prime_blind)
+            .to_affine();
 
         transcript.write_point(q_prime_commitment)?;
 
@@ -117,6 +122,14 @@ impl<'params, C: CurveAffine> Prover<'params, IPACommitmentScheme<C>> for Prover
             },
         );
 
-        commitment::create_proof(self.params, rng, transcript, &p_poly, p_poly_blind, *x_3)
+        commitment::create_proof(
+            engine,
+            self.params,
+            rng,
+            transcript,
+            &p_poly,
+            p_poly_blind,
+            *x_3,
+        )
     }
 }

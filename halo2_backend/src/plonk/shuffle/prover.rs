@@ -13,6 +13,7 @@ use group::{ff::BatchInvert, Curve};
 use halo2_common::plonk::{ChallengeGamma, ChallengeTheta, ChallengeX, Error, Expression};
 use halo2_middleware::ff::WithSmallOrderMulGroup;
 use halo2_middleware::poly::Rotation;
+use halo2curves::zal::MsmAccel;
 use rand_core::RngCore;
 use std::{
     iter,
@@ -103,6 +104,7 @@ pub(in crate::plonk) fn shuffle_commit_product<
     R: RngCore,
     T: TranscriptWrite<C, E>,
 >(
+    engine: &impl MsmAccel<C>,
     arg: &Argument<F>,
     pk: &ProvingKey<C>,
     params: &P,
@@ -188,7 +190,7 @@ where
     }
 
     let product_blind = Blind(C::Scalar::random(rng));
-    let product_commitment = params.commit_lagrange(&z, product_blind).to_affine();
+    let product_commitment = params.commit_lagrange(engine, &z, product_blind).to_affine();
     let z = pk.vk.domain.lagrange_to_coeff(z);
 
     // Hash product commitment

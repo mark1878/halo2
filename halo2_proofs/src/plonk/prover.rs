@@ -4,8 +4,56 @@ use halo2_common::plonk::{circuit::Circuit, Error};
 use halo2_common::transcript::{EncodedChallenge, TranscriptWrite};
 use halo2_frontend::circuit::{compile_circuit, WitnessCalculator};
 use halo2_middleware::ff::{FromUniformBytes, WithSmallOrderMulGroup};
+use halo2curves::zal::{H2cEngine, MsmAccel};
 use rand_core::RngCore;
 use std::collections::HashMap;
+
+/// This creates a proof for the provided `circuit` when given the public
+/// parameters `params` and the proving key [`ProvingKey`] that was
+/// generated previously for the same circuit. The provided `instances`
+/// are zero-padded internally.
+pub fn create_proof_with_engine<
+    'params,
+    Scheme: CommitmentScheme,
+    P: Prover<'params, Scheme>,
+    E: EncodedChallenge<Scheme::Curve>,
+    R: RngCore,
+    T: TranscriptWrite<Scheme::Curve, E>,
+    ConcreteCircuit: Circuit<Scheme::Scalar>,
+>(
+    engine: &impl MsmAccel<Scheme::Curve>,
+    params: &'params Scheme::ParamsProver,
+    pk: &ProvingKey<Scheme::Curve>,
+    circuits: &[ConcreteCircuit],
+    instances: &[&[&[Scheme::Scalar]]],
+    rng: R,
+    transcript: &mut T,
+) -> Result<(), Error>
+where
+    Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
+{
+    if circuits.len() != instances.len() {
+        return Err(Error::InvalidInstances);
+    }
+    let (_, config, cs) =
+        compile_circuit(params.k(), &circuits[0], pk.get_vk().compress_selectors)?;
+    let mut witness_calcs: Vec<_> = circuits
+        .iter()
+        .enumerate()
+        .map(|(i, circuit)| WitnessCalculator::new(params.k(), circuit, &config, &cs, instances[i]))
+        .collect();
+    let mut prover = ProverV2::<Scheme, P, _, _, _>::new(engine, params, pk, instances, rng, transcript)?;
+    let mut challenges = HashMap::new();
+    let phases = prover.phases.clone();
+    for phase in &phases {
+        let mut witnesses = Vec::with_capacity(circuits.len());
+        for witness_calc in witness_calcs.iter_mut() {
+            witnesses.push(witness_calc.calc(phase.0, &challenges)?);
+        }
+        challenges = prover.commit_phase(engine, phase.0, witnesses).unwrap();
+    }
+    prover.create_proof_with_engine(engine)
+}
 
 /// This creates a proof for the provided `circuit` when given the public
 /// parameters `params` and the proving key [`ProvingKey`] that was
@@ -30,27 +78,7 @@ pub fn create_proof<
 where
     Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
 {
-    if circuits.len() != instances.len() {
-        return Err(Error::InvalidInstances);
-    }
-    let (_, config, cs) =
-        compile_circuit(params.k(), &circuits[0], pk.get_vk().compress_selectors)?;
-    let mut witness_calcs: Vec<_> = circuits
-        .iter()
-        .enumerate()
-        .map(|(i, circuit)| WitnessCalculator::new(params.k(), circuit, &config, &cs, instances[i]))
-        .collect();
-    let mut prover = ProverV2::<Scheme, P, _, _, _>::new(params, pk, instances, rng, transcript)?;
-    let mut challenges = HashMap::new();
-    let phases = prover.phases.clone();
-    for phase in &phases {
-        let mut witnesses = Vec::with_capacity(circuits.len());
-        for witness_calc in witness_calcs.iter_mut() {
-            witnesses.push(witness_calc.calc(phase.0, &challenges)?);
-        }
-        challenges = prover.commit_phase(phase.0, witnesses).unwrap();
-    }
-    prover.create_proof()
+    create_proof_with_engine(&H2cEngine::new(), params, pk, circuits, instances, rng, transcript)
 }
 
 #[test]

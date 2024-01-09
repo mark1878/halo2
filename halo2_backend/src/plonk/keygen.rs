@@ -2,6 +2,7 @@
 
 use group::Curve;
 use halo2_middleware::ff::{Field, FromUniformBytes};
+use halo2curves::zal::H2cEngine;
 
 use super::{evaluation::Evaluator, permutation, Polynomial, ProvingKey, VerifyingKey};
 use crate::{
@@ -72,6 +73,7 @@ where
         .map(|poly| {
             params
                 .commit_lagrange(
+                    &H2cEngine::new(),
                     &Polynomial::new_lagrange_from_vec(poly.clone()),
                     Blind::default(),
                 )

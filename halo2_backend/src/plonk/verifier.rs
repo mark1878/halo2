@@ -3,6 +3,7 @@ use halo2_common::plonk::{
     ChallengeBeta, ChallengeGamma, ChallengeTheta, ChallengeX, ChallengeY, Error,
 };
 use halo2_middleware::ff::{Field, FromUniformBytes, WithSmallOrderMulGroup};
+use halo2curves::zal::H2cEngine;
 use std::iter;
 
 use super::{vanishing, VerifyingKey};
@@ -63,6 +64,9 @@ pub fn verify_proof<
 where
     Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
 {
+    // ZAL: Verification is (supposedly) cheap, hence we don't use an accelerator engine
+    let default_engine = H2cEngine::new();
+
     // Check that instances matches the expected number of instance columns
     for instances in instances.iter() {
         if instances.len() != vk.cs.num_instance_columns {
@@ -84,7 +88,9 @@ where
                         poly.resize(params.n() as usize, Scheme::Scalar::ZERO);
                         let poly = vk.domain.lagrange_from_vec(poly);
 
-                        Ok(params.commit_lagrange(&poly, Blind::default()).to_affine())
+                        Ok(params
+                            .commit_lagrange(&default_engine, &poly, Blind::default())
+                            .to_affine())
                     })
                     .collect::<Result<Vec<_>, _>>()
             })

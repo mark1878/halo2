@@ -1,7 +1,7 @@
 use group::ff::Field;
 use halo2_common::plonk::Error;
 use halo2_middleware::ff::FromUniformBytes;
-use halo2curves::CurveAffine;
+use halo2curves::{zal::H2cEngine, CurveAffine};
 use rand_core::OsRng;
 
 use super::{verify_proof, VerificationStrategy};
@@ -129,7 +129,8 @@ where
             );
 
         match final_msm {
-            Ok(msm) => msm.check(),
+            // ZAL: Verification is (supposedly) cheap, hence we don't use an accelerator engine
+            Ok(msm) => msm.check(&H2cEngine::new()),
             Err(_) => false,
         }
     }

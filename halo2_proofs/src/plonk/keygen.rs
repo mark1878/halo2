@@ -6,6 +6,7 @@ use halo2_backend::{arithmetic::CurveAffine, poly::commitment::Params};
 use halo2_common::plonk::{circuit::Circuit, Error};
 use halo2_frontend::circuit::compile_circuit;
 use halo2_middleware::ff::FromUniformBytes;
+use halo2curves::zal::H2cEngine;
 
 /// Generate a `VerifyingKey` from an instance of `Circuit`.
 /// By default, selector compression is turned **off**.
