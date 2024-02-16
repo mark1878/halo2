@@ -1,15 +1,12 @@
 use std::fmt::Debug;
 
 use super::commitment::ParamsKZG;
-use crate::{
-    arithmetic::parallelize,
-    poly::commitment::MSM,
-};
+use crate::{arithmetic::parallelize, poly::commitment::MSM};
 use group::{Curve, Group};
 use halo2curves::{
     pairing::{Engine, MillerLoopResult, MultiMillerLoop},
-    CurveAffine, CurveExt,
     zal::MsmAccel,
+    CurveAffine, CurveExt,
 };
 
 /// A multiscalar multiplication in the polynomial commitment scheme

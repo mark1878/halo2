@@ -16,8 +16,8 @@ use crate::multicore::{IntoParallelIterator, ParallelIterator};
 use group::Curve;
 use halo2_middleware::ff::Field;
 use halo2curves::pairing::Engine;
-use halo2curves::CurveExt;
 use halo2curves::zal::MsmAccel;
+use halo2curves::CurveExt;
 use rand_core::RngCore;
 use std::fmt::Debug;
 use std::io;
@@ -118,7 +118,7 @@ where
     }
 
     /// Create a multi-opening proof
-    fn create_proof<
+    fn create_proof_with_engine<
         'com,
         Ch: EncodedChallenge<E::G1Affine>,
         T: TranscriptWrite<E::G1Affine, Ch>,

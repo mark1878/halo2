@@ -190,7 +190,9 @@ where
     }
 
     let product_blind = Blind(C::Scalar::random(rng));
-    let product_commitment = params.commit_lagrange(engine, &z, product_blind).to_affine();
+    let product_commitment = params
+        .commit_lagrange(engine, &z, product_blind)
+        .to_affine();
     let z = pk.vk.domain.lagrange_to_coeff(z);
 
     // Hash product commitment

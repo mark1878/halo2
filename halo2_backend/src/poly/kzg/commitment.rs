@@ -302,7 +302,12 @@ where
         MSMKZG::new()
     }
 
-    fn commit_lagrange(&self, engine: &impl MsmAccel<E::G1Affine>, poly: &Polynomial<E::Fr, LagrangeCoeff>, _: Blind<E::Fr>) -> E::G1 {
+    fn commit_lagrange(
+        &self,
+        engine: &impl MsmAccel<E::G1Affine>,
+        poly: &Polynomial<E::Fr, LagrangeCoeff>,
+        _: Blind<E::Fr>,
+    ) -> E::G1 {
         let mut scalars = Vec::with_capacity(poly.len());
         scalars.extend(poly.iter());
         let bases = &self.g_lagrange;
@@ -346,7 +351,12 @@ where
         Self::setup(k, OsRng)
     }
 
-    fn commit(&self, engine: &impl MsmAccel<E::G1Affine>, poly: &Polynomial<E::Fr, Coeff>, _: Blind<E::Fr>) -> E::G1 {
+    fn commit(
+        &self,
+        engine: &impl MsmAccel<E::G1Affine>,
+        poly: &Polynomial<E::Fr, Coeff>,
+        _: Blind<E::Fr>,
+    ) -> E::G1 {
         let mut scalars = Vec::with_capacity(poly.len());
         scalars.extend(poly.iter());
         let bases = &self.g;

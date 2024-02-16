@@ -6,7 +6,10 @@ use super::{
 use crate::poly::Error;
 use crate::transcript::{EncodedChallenge, TranscriptRead, TranscriptWrite};
 use halo2_middleware::ff::Field;
-use halo2curves::{zal::MsmAccel, CurveAffine};
+use halo2curves::{
+    zal::{H2cEngine, MsmAccel},
+    CurveAffine,
+};
 use rand_core::RngCore;
 use std::{
     fmt::Debug,
@@ -137,7 +140,7 @@ pub trait Prover<'params, Scheme: CommitmentScheme> {
     fn new(params: &'params Scheme::ParamsProver) -> Self;
 
     /// Create a multi-opening proof
-    fn create_proof<
+    fn create_proof_with_engine<
         'com,
         E: EncodedChallenge<Scheme::Curve>,
         T: TranscriptWrite<Scheme::Curve, E>,
@@ -153,6 +156,26 @@ pub trait Prover<'params, Scheme: CommitmentScheme> {
     where
         I: IntoIterator<Item = ProverQuery<'com, Scheme::Curve>> + Clone,
         R: RngCore;
+
+    /// Create a multi-opening proof
+    fn create_proof<
+        'com,
+        E: EncodedChallenge<Scheme::Curve>,
+        T: TranscriptWrite<Scheme::Curve, E>,
+        R,
+        I,
+    >(
+        &self,
+        rng: R,
+        transcript: &mut T,
+        queries: I,
+    ) -> io::Result<()>
+    where
+        I: IntoIterator<Item = ProverQuery<'com, Scheme::Curve>> + Clone,
+        R: RngCore,
+    {
+        self.create_proof_with_engine(&H2cEngine::new(), rng, transcript, queries)
+    }
 }
 
 /// Common multi-open verifier interface for various commitment schemes

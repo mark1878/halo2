@@ -28,7 +28,7 @@ impl<'params, C: CurveAffine> Prover<'params, IPACommitmentScheme<C>> for Prover
     }
 
     /// Create a multi-opening proof
-    fn create_proof<'com, Z: EncodedChallenge<C>, T: TranscriptWrite<C, Z>, R, I>(
+    fn create_proof_with_engine<'com, Z: EncodedChallenge<C>, T: TranscriptWrite<C, Z>, R, I>(
         &self,
         engine: &impl MsmAccel<C>,
         mut rng: R,
@@ -122,7 +122,7 @@ impl<'params, C: CurveAffine> Prover<'params, IPACommitmentScheme<C>> for Prover
             },
         );
 
-        commitment::create_proof(
+        commitment::create_proof_with_engine(
             engine,
             self.params,
             rng,

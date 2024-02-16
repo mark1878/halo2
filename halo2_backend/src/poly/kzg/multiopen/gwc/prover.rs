@@ -9,8 +9,8 @@ use crate::poly::{commitment::Blind, Polynomial};
 use crate::transcript::{EncodedChallenge, TranscriptWrite};
 
 use group::Curve;
-use halo2curves::{pairing::Engine, zal::MsmAccel};
 use halo2curves::CurveExt;
+use halo2curves::{pairing::Engine, zal::MsmAccel};
 use rand_core::RngCore;
 use std::fmt::Debug;
 use std::io;
@@ -36,7 +36,7 @@ where
     }
 
     /// Create a multi-opening proof
-    fn create_proof<
+    fn create_proof_with_engine<
         'com,
         Ch: EncodedChallenge<E::G1Affine>,
         T: TranscriptWrite<E::G1Affine, Ch>,

@@ -7,9 +7,9 @@ use halo2_proofs::arithmetic::Field;
 use halo2_proofs::circuit::{Cell, Layouter, SimpleFloorPlanner, Value};
 use halo2_proofs::dev::MockProver;
 use halo2_proofs::plonk::{
-    create_proof as create_plonk_proof, keygen_pk, keygen_vk, verify_proof as verify_plonk_proof,
-    Advice, Assigned, Circuit, Column, ConstraintSystem, Error, Fixed, ProvingKey, TableColumn,
-    VerifyingKey,
+    create_proof_with_engine as create_plonk_proof_with_engine, keygen_pk, keygen_vk,
+    verify_proof as verify_plonk_proof, Advice, Assigned, Circuit, Column, ConstraintSystem, Error,
+    Fixed, ProvingKey, TableColumn, VerifyingKey,
 };
 use halo2_proofs::poly::commitment::{CommitmentScheme, ParamsProver, Prover, Verifier};
 use halo2_proofs::poly::Rotation;
@@ -455,7 +455,7 @@ fn plonk_api() {
         keygen_pk(params, vk, &empty_circuit).expect("keygen_pk should not fail")
     }
 
-    fn create_proof<
+    fn create_proof_with_engine<
         'params,
         Scheme: CommitmentScheme,
         P: Prover<'params, Scheme>,
@@ -480,7 +480,7 @@ fn plonk_api() {
 
         let mut transcript = T::init(vec![]);
 
-        create_plonk_proof::<Scheme, P, _, _, _, _>(
+        create_plonk_proof_with_engine::<Scheme, P, _, _, _, _>(
             engine,
             params,
             pk,
@@ -499,6 +499,24 @@ fn plonk_api() {
         assert_eq!(prover.verify(), Ok(()));
 
         transcript.finalize()
+    }
+
+    fn create_proof<
+        'params,
+        Scheme: CommitmentScheme,
+        P: Prover<'params, Scheme>,
+        E: EncodedChallenge<Scheme::Curve>,
+        R: RngCore,
+        T: TranscriptWriterBuffer<Vec<u8>, Scheme::Curve, E>,
+    >(
+        rng: R,
+        params: &'params Scheme::ParamsProver,
+        pk: &ProvingKey<Scheme::Curve>,
+    ) -> Vec<u8>
+    where
+        Scheme::Scalar: Ord + WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
+    {
+        create_proof_with_engine::<Scheme, P, _, _, T>(&H2cEngine::new(), rng, params, pk)
     }
 
     fn verify_proof<
@@ -543,14 +561,13 @@ fn plonk_api() {
         type Scheme = KZGCommitmentScheme<Bn256>;
         bad_keys!(Scheme);
 
-        let engine = H2cEngine::new();
         let params = ParamsKZG::<Bn256>::new(K);
         let rng = OsRng;
 
         let pk = keygen::<KZGCommitmentScheme<_>>(&params);
 
         let proof = create_proof::<_, ProverGWC<_>, _, _, Blake2bWrite<_, _, Challenge255<_>>>(
-            &engine, rng, &params, &pk,
+            rng, &params, &pk,
         );
 
         let verifier_params = params.verifier_params();
@@ -573,14 +590,13 @@ fn plonk_api() {
         type Scheme = KZGCommitmentScheme<Bn256>;
         bad_keys!(Scheme);
 
-        let engine = H2cEngine::new();
         let params = ParamsKZG::<Bn256>::new(K);
         let rng = OsRng;
 
         let pk = keygen::<KZGCommitmentScheme<_>>(&params);
 
         let proof = create_proof::<_, ProverSHPLONK<_>, _, _, Blake2bWrite<_, _, Challenge255<_>>>(
-            &engine, rng, &params, &pk,
+            rng, &params, &pk,
         );
 
         let verifier_params = params.verifier_params();
@@ -603,14 +619,13 @@ fn plonk_api() {
         type Scheme = IPACommitmentScheme<EqAffine>;
         bad_keys!(Scheme);
 
-        let engine = H2cEngine::new();
         let params = ParamsIPA::<EqAffine>::new(K);
         let rng = OsRng;
 
         let pk = keygen::<IPACommitmentScheme<EqAffine>>(&params);
 
         let proof = create_proof::<_, ProverIPA<_>, _, _, Blake2bWrite<_, _, Challenge255<_>>>(
-            &engine, rng, &params, &pk,
+            rng, &params, &pk,
         );
 
         let verifier_params = params.verifier_params();

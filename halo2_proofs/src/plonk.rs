@@ -13,7 +13,7 @@ mod verifier {
 
 pub use keygen::{keygen_pk, keygen_vk};
 
-pub use prover::create_proof;
+pub use prover::{create_proof, create_proof_with_engine};
 pub use verifier::verify_proof;
 
 pub use halo2_backend::plonk::{ProvingKey, VerifyingKey};

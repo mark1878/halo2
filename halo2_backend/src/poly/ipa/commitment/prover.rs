@@ -3,9 +3,7 @@ use halo2curves::zal::MsmAccel;
 use rand_core::RngCore;
 
 use super::ParamsIPA;
-use crate::arithmetic::{
-    compute_inner_product, eval_polynomial, parallelize, CurveAffine,
-};
+use crate::arithmetic::{compute_inner_product, eval_polynomial, parallelize, CurveAffine};
 
 use crate::poly::commitment::ParamsProver;
 use crate::poly::{commitment::Blind, Coeff, Polynomial};
@@ -27,7 +25,7 @@ use std::io::{self};
 /// opening v, and the point x. It's probably also nice for the transcript
 /// to have seen the elliptic curve description and the URS, if you want to
 /// be rigorous.
-pub fn create_proof<
+pub fn create_proof_with_engine<
     C: CurveAffine,
     E: EncodedChallenge<C>,
     R: RngCore,

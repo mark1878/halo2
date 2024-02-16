@@ -18,7 +18,6 @@ use halo2_proofs::{
         Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
     },
 };
-use halo2curves::zal::{H2cEngine, MsmAccel};
 use rand_core::{OsRng, RngCore};
 use std::iter;
 
@@ -271,7 +270,6 @@ fn test_mock_prover<F: Ord + FromUniformBytes<64>, const W: usize, const H: usiz
 }
 
 fn test_prover<C: CurveAffine, const W: usize, const H: usize>(
-    engine: &impl MsmAccel<C>,
     k: u32,
     circuit: MyCircuit<C::Scalar, W, H>,
     expected: bool,
@@ -286,7 +284,6 @@ fn test_prover<C: CurveAffine, const W: usize, const H: usize>(
         let mut transcript = Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
 
         create_proof::<IPACommitmentScheme<C>, ProverIPA<C>, _, _, _, _>(
-            engine,
             &params,
             &pk,
             &[circuit],
@@ -322,12 +319,11 @@ fn main() {
     const H: usize = 32;
     const K: u32 = 8;
 
-    let engine = H2cEngine::new();
     let circuit = &MyCircuit::<_, W, H>::rand(&mut OsRng);
 
     {
         test_mock_prover(K, circuit.clone(), Ok(()));
-        test_prover::<EqAffine, W, H>(&engine, K, circuit.clone(), true);
+        test_prover::<EqAffine, W, H>(K, circuit.clone(), true);
     }
 
     #[cfg(not(feature = "sanity-checks"))]
@@ -351,6 +347,6 @@ fn main() {
                 },
             )]),
         );
-        test_prover::<EqAffine, W, H>(&engine, K, circuit, false);
+        test_prover::<EqAffine, W, H>(K, circuit, false);
     }
 }

@@ -548,9 +548,12 @@ fn test_mycircuit_full_legacy() {
 
 #[test]
 fn test_mycircuit_full_split() {
+    use halo2curves::zal::H2cEngine;
+
     #[cfg(feature = "heap-profiling")]
     let _profiler = dhat::Profiler::new_heap();
 
+    let engine = H2cEngine::new();
     let k = K;
     let circuit: MyCircuit<Fr, WIDTH_FACTOR> = MyCircuit::new(k, 42);
     let (compiled_circuit, config, cs) = compile_circuit(k, &circuit, false).unwrap();
@@ -577,8 +580,11 @@ fn test_mycircuit_full_split() {
     let start = Instant::now();
     let mut witness_calc = WitnessCalculator::new(k, &circuit, &config, &cs, instances_slice);
     let mut transcript = Blake2bWrite::<_, G1Affine, Challenge255<_>>::init(vec![]);
+    // TODO: is ProverV2Single::new part of the public API?
+    // if yes we need to create a ProverV2Single::new_with_engine instead.
     let mut prover =
-        ProverV2Single::<KZGCommitmentScheme<Bn256>, ProverSHPLONK<'_, Bn256>, _, _, _>::new(
+        ProverV2Single::<KZGCommitmentScheme<Bn256>, ProverSHPLONK<'_, Bn256>, _, _, _>::new_with_engine(
+            &engine,
             &params,
             &pk,
             instances_slice,
@@ -590,9 +596,9 @@ fn test_mycircuit_full_split() {
     for phase in 0..cs.phases().count() {
         println!("phase {phase}");
         let witness = witness_calc.calc(phase as u8, &challenges).unwrap();
-        challenges = prover.commit_phase(phase as u8, witness).unwrap();
+        challenges = prover.commit_phase(&engine, phase as u8, witness).unwrap();
     }
-    prover.create_proof().unwrap();
+    prover.create_proof_with_engine(&engine).unwrap();
     let proof = transcript.finalize();
     println!("Prove: {:?}", start.elapsed());
 

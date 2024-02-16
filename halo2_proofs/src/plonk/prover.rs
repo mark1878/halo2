@@ -42,7 +42,9 @@ where
         .enumerate()
         .map(|(i, circuit)| WitnessCalculator::new(params.k(), circuit, &config, &cs, instances[i]))
         .collect();
-    let mut prover = ProverV2::<Scheme, P, _, _, _>::new(engine, params, pk, instances, rng, transcript)?;
+    let mut prover = ProverV2::<Scheme, P, _, _, _>::new_with_engine(
+        engine, params, pk, instances, rng, transcript,
+    )?;
     let mut challenges = HashMap::new();
     let phases = prover.phases.clone();
     for phase in &phases {
@@ -78,7 +80,15 @@ pub fn create_proof<
 where
     Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
 {
-    create_proof_with_engine(&H2cEngine::new(), params, pk, circuits, instances, rng, transcript)
+    create_proof_with_engine::<Scheme, P, _, _, _, _>(
+        &H2cEngine::new(),
+        params,
+        pk,
+        circuits,
+        instances,
+        rng,
+        transcript,
+    )
 }
 
 #[test]

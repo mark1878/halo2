@@ -59,7 +59,7 @@ impl<
     > ProverV2Single<'a, 'params, Scheme, P, E, R, T>
 {
     /// Create a new prover object
-    pub fn new(
+    pub fn new_with_engine(
         engine: &impl MsmAccel<Scheme::Curve>,
         params: &'params Scheme::ParamsProver,
         pk: &'a ProvingKey<Scheme::Curve>,
@@ -72,7 +72,7 @@ impl<
     where
         Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
     {
-        Ok(Self(ProverV2::new(
+        Ok(Self(ProverV2::new_with_engine(
             engine,
             params,
             pk,
@@ -80,6 +80,21 @@ impl<
             rng,
             transcript,
         )?))
+    }
+
+    pub fn new(
+        params: &'params Scheme::ParamsProver,
+        pk: &'a ProvingKey<Scheme::Curve>,
+        // TODO: If this was a vector the usage would be simpler
+        // https://github.com/privacy-scaling-explorations/halo2/issues/265
+        instance: &[&[Scheme::Scalar]],
+        rng: R,
+        transcript: &'a mut T,
+    ) -> Result<Self, Error>
+    where
+        Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
+    {
+        Self::new_with_engine(&H2cEngine::new(), params, pk, instance, rng, transcript)
     }
 
     /// Commit the `witness` at `phase` and return the challenges after `phase`.
@@ -105,13 +120,15 @@ impl<
 
     /// Finalizes the proof creation.
     /// TODO: change to "ZalEngine" which will contain MsmAccel and FftAccel trait accelerators
-    pub fn create_proof_with_engine(self, engine: &impl MsmAccel<Scheme::Curve>) -> Result<(), Error>
+    pub fn create_proof_with_engine(
+        self,
+        engine: &impl MsmAccel<Scheme::Curve>,
+    ) -> Result<(), Error>
     where
         Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
     {
         self.0.create_proof_with_engine(engine)
     }
-
 }
 
 /// The prover object used to create proofs interactively by passing the witnesses to commit at
@@ -152,7 +169,7 @@ impl<
     > ProverV2<'a, 'params, Scheme, P, E, R, T>
 {
     /// Create a new prover object
-    pub fn new(
+    pub fn new_with_engine(
         engine: &impl MsmAccel<Scheme::Curve>,
         params: &'params Scheme::ParamsProver,
         pk: &'a ProvingKey<Scheme::Curve>,
@@ -431,7 +448,10 @@ impl<
     }
 
     /// Finalizes the proof creation.
-    pub fn create_proof_with_engine(mut self, engine: &impl MsmAccel<Scheme::Curve>) -> Result<(), Error>
+    pub fn create_proof_with_engine(
+        mut self,
+        engine: &impl MsmAccel<Scheme::Curve>,
+    ) -> Result<(), Error>
     where
         Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
     {
@@ -523,7 +543,15 @@ impl<
                 lookups
                     .into_iter()
                     .map(|lookup| {
-                        lookup.commit_product(engine, pk, params, beta, gamma, &mut rng, self.transcript)
+                        lookup.commit_product(
+                            engine,
+                            pk,
+                            params,
+                            beta,
+                            gamma,
+                            &mut rng,
+                            self.transcript,
+                        )
                     })
                     .collect::<Result<Vec<_>, _>>()
             })
@@ -558,7 +586,8 @@ impl<
             .collect::<Result<Vec<_>, _>>()?;
 
         // Commit to the vanishing argument's random polynomial for blinding h(x_3)
-        let vanishing = vanishing::Argument::commit(engine, params, domain, &mut rng, self.transcript)?;
+        let vanishing =
+            vanishing::Argument::commit(engine, params, domain, &mut rng, self.transcript)?;
 
         // Obtain challenge for keeping all separate gates linearly independent
         let y: ChallengeY<_> = self.transcript.squeeze_challenge_scalar();
@@ -604,7 +633,8 @@ impl<
         );
 
         // Construct the vanishing argument's h(X) commitments
-        let vanishing = vanishing.construct(engine, params, domain, h_poly, &mut rng, self.transcript)?;
+        let vanishing =
+            vanishing.construct(engine, params, domain, h_poly, &mut rng, self.transcript)?;
 
         let x: ChallengeX<_> = self.transcript.squeeze_challenge_scalar();
         let xn = x.pow([params.n()]);
@@ -744,18 +774,33 @@ impl<
 
         let prover = P::new(params);
         prover
-            .create_proof(engine, rng, self.transcript, instances)
+            .create_proof_with_engine(engine, rng, self.transcript, instances)
             .map_err(|_| Error::ConstraintSystemFailure)?;
 
         Ok(())
     }
 
+    /// Create a new prover object
+    pub fn new(
+        params: &'params Scheme::ParamsProver,
+        pk: &'a ProvingKey<Scheme::Curve>,
+        // TODO: If this was a vector the usage would be simpler.
+        // https://github.com/privacy-scaling-explorations/halo2/issues/265
+        instances: &[&[&[Scheme::Scalar]]],
+        rng: R,
+        transcript: &'a mut T,
+    ) -> Result<Self, Error>
+    where
+        Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
+    {
+        Self::new_with_engine(&H2cEngine::new(), params, pk, instances, rng, transcript)
+    }
+
     /// Finalizes the proof creation.
-    pub fn create_proof(mut self) -> Result<(), Error>
+    pub fn create_proof(self) -> Result<(), Error>
     where
         Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
     {
         self.create_proof_with_engine(&H2cEngine::new())
     }
-
 }

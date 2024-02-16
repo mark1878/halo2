@@ -16,7 +16,7 @@ use std::marker::PhantomData;
 mod prover;
 mod verifier;
 
-pub use prover::create_proof;
+pub use prover::create_proof_with_engine;
 pub use verifier::verify_proof;
 
 use std::io;
@@ -238,7 +238,7 @@ impl<'params, C: CurveAffine> ParamsProver<'params, C> for ParamsIPA<C> {
 mod test {
     use crate::poly::commitment::ParamsProver;
     use crate::poly::commitment::{Blind, Params, MSM};
-    use crate::poly::ipa::commitment::{create_proof, verify_proof, ParamsIPA};
+    use crate::poly::ipa::commitment::{create_proof_with_engine, verify_proof, ParamsIPA};
     use crate::poly::ipa::msm::MSMIPA;
 
     use group::Curve;
@@ -350,7 +350,8 @@ mod test {
         transcript.write_scalar(v).unwrap();
 
         let (proof, ch_prover) = {
-            create_proof(&engine, &params, rng, &mut transcript, &px, blind, *x).unwrap();
+            create_proof_with_engine(&engine, &params, rng, &mut transcript, &px, blind, *x)
+                .unwrap();
             let ch_prover = transcript.squeeze_challenge();
             (transcript.finalize(), ch_prover)
         };
