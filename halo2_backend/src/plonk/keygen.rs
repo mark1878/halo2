@@ -2,7 +2,7 @@
 
 use group::Curve;
 use halo2_middleware::ff::{Field, FromUniformBytes};
-use halo2curves::zal::H2cEngine;
+use halo2_middleware::zal::impls::H2cEngine;
 
 use super::{evaluation::Evaluator, permutation, Polynomial, ProvingKey, VerifyingKey};
 use crate::{

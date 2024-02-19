@@ -18,7 +18,7 @@ use halo2_common::plonk::{
 };
 use halo2_middleware::ff::WithSmallOrderMulGroup;
 use halo2_middleware::poly::Rotation;
-use halo2curves::zal::MsmAccel;
+use halo2_middleware::zal::traits::MsmAccel;
 use rand_core::RngCore;
 use std::{
     collections::BTreeMap,

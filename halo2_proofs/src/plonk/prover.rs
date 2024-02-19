@@ -4,7 +4,7 @@ use halo2_common::plonk::{circuit::Circuit, Error};
 use halo2_common::transcript::{EncodedChallenge, TranscriptWrite};
 use halo2_frontend::circuit::{compile_circuit, WitnessCalculator};
 use halo2_middleware::ff::{FromUniformBytes, WithSmallOrderMulGroup};
-use halo2curves::zal::{H2cEngine, MsmAccel};
+use halo2_middleware::zal::{impls::H2cEngine, traits::MsmAccel};
 use rand_core::RngCore;
 use std::collections::HashMap;
 

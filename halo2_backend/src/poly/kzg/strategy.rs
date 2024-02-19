@@ -11,9 +11,9 @@ use crate::{
     },
 };
 use halo2_middleware::ff::Field;
+use halo2_middleware::zal::impls::H2cEngine;
 use halo2curves::{
     pairing::{Engine, MultiMillerLoop},
-    zal::H2cEngine,
     CurveAffine, CurveExt,
 };
 use rand_core::OsRng;

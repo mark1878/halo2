@@ -9,7 +9,7 @@ use crate::transcript::{EncodedChallenge, TranscriptWrite};
 
 use group::Curve;
 use halo2_middleware::ff::Field;
-use halo2curves::zal::MsmAccel;
+use halo2_middleware::zal::traits::MsmAccel;
 use rand_core::RngCore;
 use std::io;
 use std::marker::PhantomData;

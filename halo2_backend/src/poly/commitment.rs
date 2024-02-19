@@ -6,10 +6,8 @@ use super::{
 use crate::poly::Error;
 use crate::transcript::{EncodedChallenge, TranscriptRead, TranscriptWrite};
 use halo2_middleware::ff::Field;
-use halo2curves::{
-    zal::{H2cEngine, MsmAccel},
-    CurveAffine,
-};
+use halo2_middleware::zal::{impls::H2cEngine, traits::MsmAccel};
+use halo2curves::CurveAffine;
 use rand_core::RngCore;
 use std::{
     fmt::Debug,

@@ -6,8 +6,8 @@ use crate::SerdeFormat;
 
 use group::{prime::PrimeCurveAffine, Curve, Group};
 use halo2_middleware::ff::{Field, PrimeField};
+use halo2_middleware::zal::traits::MsmAccel;
 use halo2curves::pairing::Engine;
-use halo2curves::zal::MsmAccel;
 use rand_core::{OsRng, RngCore};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -376,7 +376,7 @@ mod test {
     use crate::poly::commitment::{Blind, Params};
     use crate::poly::kzg::commitment::ParamsKZG;
     use halo2_middleware::ff::Field;
-    use halo2curves::zal::H2cEngine;
+    use halo2_middleware::zal::impls::H2cEngine;
 
     #[test]
     fn test_commit_lagrange() {

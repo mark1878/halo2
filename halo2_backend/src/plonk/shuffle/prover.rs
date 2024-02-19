@@ -13,7 +13,7 @@ use group::{ff::BatchInvert, Curve};
 use halo2_common::plonk::{ChallengeGamma, ChallengeTheta, ChallengeX, Error, Expression};
 use halo2_middleware::ff::WithSmallOrderMulGroup;
 use halo2_middleware::poly::Rotation;
-use halo2curves::zal::MsmAccel;
+use halo2_middleware::zal::traits::MsmAccel;
 use rand_core::RngCore;
 use std::{
     iter,

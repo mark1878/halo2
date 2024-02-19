@@ -10,7 +10,7 @@ use crate::poly::ipa::msm::MSMIPA;
 use crate::poly::{Coeff, LagrangeCoeff, Polynomial};
 
 use group::{Curve, Group};
-use halo2curves::zal::MsmAccel;
+use halo2_middleware::zal::traits::MsmAccel;
 use std::marker::PhantomData;
 
 mod prover;
@@ -243,7 +243,7 @@ mod test {
 
     use group::Curve;
     use halo2_middleware::ff::Field;
-    use halo2curves::zal::H2cEngine;
+    use halo2_middleware::zal::impls::H2cEngine;
 
     #[test]
     fn test_commit_lagrange_epaffine() {

@@ -10,7 +10,7 @@ use crate::{
 };
 use group::Curve;
 use halo2_middleware::ff::Field;
-use halo2curves::zal::{H2cEngine, MsmAccel};
+use halo2_middleware::zal::{impls::H2cEngine, traits::MsmAccel};
 use halo2curves::CurveAffine;
 use rand_core::OsRng;
 

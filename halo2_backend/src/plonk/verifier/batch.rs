@@ -1,7 +1,8 @@
 use group::ff::Field;
 use halo2_common::plonk::Error;
 use halo2_middleware::ff::FromUniformBytes;
-use halo2curves::{zal::H2cEngine, CurveAffine};
+use halo2_middleware::zal::impls::H2cEngine;
+use halo2curves::CurveAffine;
 use rand_core::OsRng;
 
 use super::{verify_proof, VerificationStrategy};

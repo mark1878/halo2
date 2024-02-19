@@ -3,7 +3,7 @@ use halo2_common::plonk::{
     ChallengeBeta, ChallengeGamma, ChallengeTheta, ChallengeX, ChallengeY, Error,
 };
 use halo2_middleware::ff::{Field, FromUniformBytes, WithSmallOrderMulGroup};
-use halo2curves::zal::H2cEngine;
+use halo2_middleware::zal::impls::H2cEngine;
 use std::iter;
 
 use super::{vanishing, VerifyingKey};

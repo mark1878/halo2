@@ -3,7 +3,7 @@ use std::{collections::HashMap, iter};
 use group::Curve;
 use halo2_common::plonk::{ChallengeX, Error};
 use halo2_middleware::ff::Field;
-use halo2curves::zal::MsmAccel;
+use halo2_middleware::zal::traits::MsmAccel;
 use rand_chacha::ChaCha20Rng;
 use rand_core::{RngCore, SeedableRng};
 

@@ -1,6 +1,6 @@
 use group::Curve;
 use halo2_middleware::ff::{Field, FromUniformBytes, WithSmallOrderMulGroup};
-use halo2curves::zal::{H2cEngine, MsmAccel};
+use halo2_middleware::zal::{impls::H2cEngine, traits::MsmAccel};
 use rand_core::RngCore;
 use std::collections::{BTreeSet, HashSet};
 use std::{collections::HashMap, iter};

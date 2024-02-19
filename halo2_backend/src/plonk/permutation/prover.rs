@@ -3,7 +3,7 @@ use group::{
     Curve,
 };
 use halo2_middleware::ff::PrimeField;
-use halo2curves::zal::MsmAccel;
+use halo2_middleware::zal::traits::MsmAccel;
 use rand_core::RngCore;
 use std::iter::{self, ExactSizeIterator};
 

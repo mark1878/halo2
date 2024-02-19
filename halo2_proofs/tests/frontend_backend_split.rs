@@ -548,7 +548,7 @@ fn test_mycircuit_full_legacy() {
 
 #[test]
 fn test_mycircuit_full_split() {
-    use halo2curves::zal::H2cEngine;
+    use halo2_middleware::zal::impls::H2cEngine;
 
     #[cfg(feature = "heap-profiling")]
     let _profiler = dhat::Profiler::new_heap();

@@ -2,7 +2,7 @@ use crate::arithmetic::CurveAffine;
 use crate::poly::{commitment::MSM, ipa::commitment::ParamsVerifierIPA};
 use group::Group;
 use halo2_middleware::ff::Field;
-use halo2curves::zal::MsmAccel;
+use halo2_middleware::zal::traits::MsmAccel;
 use std::collections::BTreeMap;
 
 /// A multiscalar multiplication in the polynomial commitment scheme
@@ -222,9 +222,9 @@ mod tests {
         commitment::{ParamsProver, MSM},
         ipa::{commitment::ParamsIPA, msm::MSMIPA},
     };
+    use halo2_middleware::zal::impls::H2cEngine;
     use halo2curves::{
         pasta::{Ep, EpAffine, Fp, Fq},
-        zal::H2cEngine,
         CurveAffine,
     };
 

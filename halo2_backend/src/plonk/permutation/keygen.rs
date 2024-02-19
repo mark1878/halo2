@@ -1,6 +1,6 @@
 use group::Curve;
 use halo2_middleware::ff::{Field, PrimeField};
-use halo2curves::zal::H2cEngine;
+use halo2_middleware::zal::impls::H2cEngine;
 
 use super::{Argument, ProvingKey, VerifyingKey};
 use crate::{

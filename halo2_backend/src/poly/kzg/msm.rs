@@ -3,9 +3,9 @@ use std::fmt::Debug;
 use super::commitment::ParamsKZG;
 use crate::{arithmetic::parallelize, poly::commitment::MSM};
 use group::{Curve, Group};
+use halo2_middleware::zal::traits::MsmAccel;
 use halo2curves::{
     pairing::{Engine, MillerLoopResult, MultiMillerLoop},
-    zal::MsmAccel,
     CurveAffine, CurveExt,
 };
 

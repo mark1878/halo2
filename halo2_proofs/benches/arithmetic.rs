@@ -2,9 +2,9 @@
 extern crate criterion;
 
 use group::ff::Field;
+use halo2_middleware::zal::{impls::H2cEngine, traits::MsmAccel};
 use halo2_proofs::*;
 use halo2curves::pasta::{EqAffine, Fp};
-use halo2curves::zal::{H2cEngine, MsmAccel};
 
 use halo2_proofs::poly::{commitment::ParamsProver, ipa::commitment::ParamsIPA};
 

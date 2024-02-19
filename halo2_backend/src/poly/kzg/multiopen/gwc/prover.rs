@@ -9,8 +9,9 @@ use crate::poly::{commitment::Blind, Polynomial};
 use crate::transcript::{EncodedChallenge, TranscriptWrite};
 
 use group::Curve;
+use halo2_middleware::zal::traits::MsmAccel;
+use halo2curves::pairing::Engine;
 use halo2curves::CurveExt;
-use halo2curves::{pairing::Engine, zal::MsmAccel};
 use rand_core::RngCore;
 use std::fmt::Debug;
 use std::io;
