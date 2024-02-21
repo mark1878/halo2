@@ -114,6 +114,7 @@ pub mod impls {
 
     // Halo2curve Backend
     // ---------------------------------------------------
+    #[derive(Default)]
     pub struct H2cEngine;
 
     #[derive(Clone, Copy)]
@@ -232,7 +233,7 @@ pub mod impls {
         }
     }
 
-    impl<'e, C: CurveAffine, M: MsmAccel<C>> PlonkEngineConfig<HasCurve<C>, HasMsmEngine<C, M>> {
+    impl<C: CurveAffine, M: MsmAccel<C>> PlonkEngineConfig<HasCurve<C>, HasMsmEngine<C, M>> {
         pub fn build(self) -> PlonkEngine<C, M> {
             PlonkEngine {
                 msm_backend: self.msm_backend.unwrap().0,
