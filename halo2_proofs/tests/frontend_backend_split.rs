@@ -548,12 +548,15 @@ fn test_mycircuit_full_legacy() {
 
 #[test]
 fn test_mycircuit_full_split() {
-    use halo2_middleware::zal::impls::H2cEngine;
+    use halo2_middleware::zal::impls::{H2cEngine, PlonkEngineConfig};
 
     #[cfg(feature = "heap-profiling")]
     let _profiler = dhat::Profiler::new_heap();
 
-    let engine = H2cEngine::new();
+    let engine = PlonkEngineConfig::new()
+        .set_curve::<G1Affine>()
+        .set_msm(H2cEngine::new())
+        .build();
     let k = K;
     let circuit: MyCircuit<Fr, WIDTH_FACTOR> = MyCircuit::new(k, 42);
     let (compiled_circuit, config, cs) = compile_circuit(k, &circuit, false).unwrap();
@@ -580,8 +583,6 @@ fn test_mycircuit_full_split() {
     let start = Instant::now();
     let mut witness_calc = WitnessCalculator::new(k, &circuit, &config, &cs, instances_slice);
     let mut transcript = Blake2bWrite::<_, G1Affine, Challenge255<_>>::init(vec![]);
-    // TODO: is ProverV2Single::new part of the public API?
-    // if yes we need to create a ProverV2Single::new_with_engine instead.
     let mut prover =
         ProverV2Single::<KZGCommitmentScheme<Bn256>, ProverSHPLONK<'_, Bn256>, _, _, _>::new_with_engine(
             &engine,

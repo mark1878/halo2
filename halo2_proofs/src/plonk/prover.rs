@@ -4,7 +4,10 @@ use halo2_common::plonk::{circuit::Circuit, Error};
 use halo2_common::transcript::{EncodedChallenge, TranscriptWrite};
 use halo2_frontend::circuit::{compile_circuit, WitnessCalculator};
 use halo2_middleware::ff::{FromUniformBytes, WithSmallOrderMulGroup};
-use halo2_middleware::zal::{impls::H2cEngine, traits::MsmAccel};
+use halo2_middleware::zal::{
+    impls::{PlonkEngine, PlonkEngineConfig},
+    traits::MsmAccel,
+};
 use rand_core::RngCore;
 use std::collections::HashMap;
 
@@ -20,8 +23,9 @@ pub fn create_proof_with_engine<
     R: RngCore,
     T: TranscriptWrite<Scheme::Curve, E>,
     ConcreteCircuit: Circuit<Scheme::Scalar>,
+    M: MsmAccel<Scheme::Curve>,
 >(
-    engine: &impl MsmAccel<Scheme::Curve>,
+    engine: &PlonkEngine<Scheme::Curve, M>,
     params: &'params Scheme::ParamsProver,
     pk: &ProvingKey<Scheme::Curve>,
     circuits: &[ConcreteCircuit],
@@ -80,14 +84,9 @@ pub fn create_proof<
 where
     Scheme::Scalar: WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
 {
-    create_proof_with_engine::<Scheme, P, _, _, _, _>(
-        &H2cEngine::new(),
-        params,
-        pk,
-        circuits,
-        instances,
-        rng,
-        transcript,
+    let engine = PlonkEngineConfig::build_default();
+    create_proof_with_engine::<Scheme, P, _, _, _, _, _>(
+        &engine, params, pk, circuits, instances, rng, transcript,
     )
 }
 

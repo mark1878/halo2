@@ -6,7 +6,7 @@ use super::{
 use crate::poly::Error;
 use crate::transcript::{EncodedChallenge, TranscriptRead, TranscriptWrite};
 use halo2_middleware::ff::Field;
-use halo2_middleware::zal::{impls::H2cEngine, traits::MsmAccel};
+use halo2_middleware::zal::{impls::PlonkEngineConfig, traits::MsmAccel};
 use halo2curves::CurveAffine;
 use rand_core::RngCore;
 use std::{
@@ -172,7 +172,8 @@ pub trait Prover<'params, Scheme: CommitmentScheme> {
         I: IntoIterator<Item = ProverQuery<'com, Scheme::Curve>> + Clone,
         R: RngCore,
     {
-        self.create_proof_with_engine(&H2cEngine::new(), rng, transcript, queries)
+        let engine = PlonkEngineConfig::build_default::<Scheme::Curve>();
+        self.create_proof_with_engine(&engine.msm_backend, rng, transcript, queries)
     }
 }
 

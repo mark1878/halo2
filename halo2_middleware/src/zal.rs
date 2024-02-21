@@ -106,9 +106,14 @@ pub mod traits {
 // ---------------------------------------------------
 
 pub mod impls {
+    use std::marker::PhantomData;
+
     use crate::zal::traits::MsmAccel;
     use halo2curves::msm::best_multiexp;
     use halo2curves::CurveAffine;
+
+    // Halo2curve Backend
+    // ---------------------------------------------------
     pub struct H2cEngine;
 
     #[derive(Clone, Copy)]
@@ -170,6 +175,71 @@ pub mod impls {
             best_multiexp(coeffs.raw, base.raw)
         }
     }
+
+    // Backend-agnostic engine objects
+    // ---------------------------------------------------
+    pub struct PlonkEngine<C: CurveAffine, MsmEngine: MsmAccel<C>> {
+        pub msm_backend: MsmEngine,
+        _marker: PhantomData<C>, // compiler complains about unused C otherwise
+    }
+
+    #[derive(Default)]
+    pub struct PlonkEngineConfig<C, M> {
+        curve: PhantomData<C>,
+        msm_backend: Option<M>,
+    }
+
+    #[derive(Default)]
+    pub struct NoCurve;
+
+    #[derive(Default)]
+    pub struct HasCurve<C: CurveAffine>(PhantomData<C>);
+
+    #[derive(Default)]
+    pub struct NoMsmEngine;
+
+    pub struct HasMsmEngine<C: CurveAffine, M: MsmAccel<C>>(M, PhantomData<C>);
+
+    impl PlonkEngineConfig<NoCurve, NoMsmEngine> {
+        pub fn new() -> PlonkEngineConfig<NoCurve, NoMsmEngine> {
+            Default::default()
+        }
+
+        pub fn set_curve<C: CurveAffine>(self) -> PlonkEngineConfig<HasCurve<C>, NoMsmEngine> {
+            Default::default()
+        }
+
+        pub fn build_default<C: CurveAffine>() -> PlonkEngine<C, H2cEngine> {
+            PlonkEngine {
+                msm_backend: H2cEngine::new(),
+                _marker: Default::default(),
+            }
+        }
+    }
+
+    impl<C: CurveAffine, M> PlonkEngineConfig<HasCurve<C>, M> {
+        pub fn set_msm<MsmEngine: MsmAccel<C>>(
+            self,
+            engine: MsmEngine,
+        ) -> PlonkEngineConfig<HasCurve<C>, HasMsmEngine<C, MsmEngine>> {
+            // Copy all other parameters
+            let Self { curve, .. } = self;
+            // Return with modified MSM engine
+            PlonkEngineConfig {
+                curve,
+                msm_backend: Some(HasMsmEngine(engine, Default::default())),
+            }
+        }
+    }
+
+    impl<'e, C: CurveAffine, M: MsmAccel<C>> PlonkEngineConfig<HasCurve<C>, HasMsmEngine<C, M>> {
+        pub fn build(self) -> PlonkEngine<C, M> {
+            PlonkEngine {
+                msm_backend: self.msm_backend.unwrap().0,
+                _marker: Default::default(),
+            }
+        }
+    }
 }
 
 // Testing
@@ -177,7 +247,7 @@ pub mod impls {
 
 #[cfg(test)]
 mod test {
-    use crate::zal::impls::H2cEngine;
+    use crate::zal::impls::{H2cEngine, PlonkEngineConfig};
     use crate::zal::traits::MsmAccel;
     use halo2curves::bn256::G1Affine;
     use halo2curves::msm::best_multiexp;
@@ -208,9 +278,12 @@ mod test {
             let e0 = best_multiexp(scalars, points);
             end_timer!(t0);
 
-            let engine = H2cEngine::new();
+            let engine = PlonkEngineConfig::new()
+                .set_curve::<G1Affine>()
+                .set_msm(H2cEngine::new())
+                .build();
             let t1 = start_timer!(|| format!("H2cEngine msm k={}", k));
-            let e1 = engine.msm(scalars, points);
+            let e1 = engine.msm_backend.msm(scalars, points);
             end_timer!(t1);
 
             assert_eq!(e0, e1);
@@ -218,8 +291,10 @@ mod test {
             // Caching API
             // -----------
             let t2 = start_timer!(|| format!("H2cEngine msm cached base k={}", k));
-            let base_descriptor = engine.get_base_descriptor(points);
-            let e2 = engine.msm_with_cached_base(scalars, &base_descriptor);
+            let base_descriptor = engine.msm_backend.get_base_descriptor(points);
+            let e2 = engine
+                .msm_backend
+                .msm_with_cached_base(scalars, &base_descriptor);
             end_timer!(t2);
 
             assert_eq!(e0, e2)

@@ -3,7 +3,10 @@
 
 use assert_matches::assert_matches;
 use ff::{FromUniformBytes, WithSmallOrderMulGroup};
-use halo2_middleware::zal::{impls::H2cEngine, traits::MsmAccel};
+use halo2_middleware::zal::{
+    impls::{PlonkEngine, PlonkEngineConfig},
+    traits::MsmAccel,
+};
 use halo2_proofs::arithmetic::Field;
 use halo2_proofs::circuit::{Cell, Layouter, SimpleFloorPlanner, Value};
 use halo2_proofs::dev::MockProver;
@@ -462,8 +465,9 @@ fn plonk_api() {
         E: EncodedChallenge<Scheme::Curve>,
         R: RngCore,
         T: TranscriptWriterBuffer<Vec<u8>, Scheme::Curve, E>,
+        M: MsmAccel<Scheme::Curve>,
     >(
-        engine: &impl MsmAccel<Scheme::Curve>,
+        engine: &PlonkEngine<Scheme::Curve, M>,
         rng: R,
         params: &'params Scheme::ParamsProver,
         pk: &ProvingKey<Scheme::Curve>,
@@ -480,7 +484,7 @@ fn plonk_api() {
 
         let mut transcript = T::init(vec![]);
 
-        create_plonk_proof_with_engine::<Scheme, P, _, _, _, _>(
+        create_plonk_proof_with_engine::<Scheme, P, _, _, _, _, _>(
             engine,
             params,
             pk,
@@ -516,7 +520,8 @@ fn plonk_api() {
     where
         Scheme::Scalar: Ord + WithSmallOrderMulGroup<3> + FromUniformBytes<64>,
     {
-        create_proof_with_engine::<Scheme, P, _, _, T>(&H2cEngine::new(), rng, params, pk)
+        let engine = PlonkEngineConfig::build_default();
+        create_proof_with_engine::<Scheme, P, _, _, T, _>(&engine, rng, params, pk)
     }
 
     fn verify_proof<

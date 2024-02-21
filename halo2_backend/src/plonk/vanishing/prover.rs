@@ -3,7 +3,7 @@ use std::{collections::HashMap, iter};
 use group::Curve;
 use halo2_common::plonk::{ChallengeX, Error};
 use halo2_middleware::ff::Field;
-use halo2_middleware::zal::traits::MsmAccel;
+use halo2_middleware::zal::{impls::PlonkEngine, traits::MsmAccel};
 use rand_chacha::ChaCha20Rng;
 use rand_core::{RngCore, SeedableRng};
 
@@ -104,9 +104,10 @@ impl<C: CurveAffine> Committed<C> {
         E: EncodedChallenge<C>,
         R: RngCore,
         T: TranscriptWrite<C, E>,
+        M: MsmAccel<C>,
     >(
         self,
-        engine: &impl MsmAccel<C>,
+        engine: &PlonkEngine<C, M>,
         params: &P,
         domain: &EvaluationDomain<C::Scalar>,
         h_poly: Polynomial<C::Scalar, ExtendedLagrangeCoeff>,
@@ -134,7 +135,7 @@ impl<C: CurveAffine> Committed<C> {
         let h_commitments_projective: Vec<_> = h_pieces
             .iter()
             .zip(h_blinds.iter())
-            .map(|(h_piece, blind)| params.commit(engine, h_piece, *blind))
+            .map(|(h_piece, blind)| params.commit(&engine.msm_backend, h_piece, *blind))
             .collect();
         let mut h_commitments = vec![C::identity(); h_commitments_projective.len()];
         C::Curve::batch_normalize(&h_commitments_projective, &mut h_commitments);
